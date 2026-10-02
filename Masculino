@@ -1,0 +1,25 @@
+package com.example.fa22bcs040lab_final;
+
+import java.io.Serializable;
+import java.time.Year; // Importação necessária para pegar o ano atual dinamicamente
+
+public class Male extends Person implements Serializable {
+    
+    private static final long serialVersionUID = 1L; // Boa prática para classes Serializable
+
+    @Override
+    public void calculateBMI() {
+        // Fórmula correta e universal: Peso dividido por (Altura * Altura)
+        if (this.height > 0) {
+            this.BMI = this.weight / (this.height * this.height);
+        } else {
+            this.BMI = 0.0;
+        }
+    }
+
+    public void findage() {
+        // Captura o ano atual do sistema (Ex: 2026) para o cálculo nunca ficar obsoleto
+        int anoAtual = Year.now().getValue();
+        this.age = anoAtual - this.birthyear;
+    }
+}
