@@ -1,0 +1,9 @@
+module com.example.fa22bcs040lab_final {
+    requires javafx.controls;
+    requires javafx.fxml;
+
+    // ESSA LINHA É CRUCIAL: Permite que a TableView use reflexão para ler os atributos de Person, Male e Female
+    opens com.example.fa22bcs040lab_final to javafx.base, javafx.graphics, javafx.fxml;
+    
+    exports com.example.fa22bcs040lab_final;
+}
