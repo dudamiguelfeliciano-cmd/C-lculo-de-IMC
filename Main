@@ -1,0 +1,37 @@
+package com.example.fa22bcs040lab_final;
+
+import java.io.Serializable;
+
+public class Person implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    // Atributos como public ou protected para que as classes filhas consigam ler e alterar
+    public int id;
+    public String name;
+    public double height;
+    public double weight;
+    public String gender;
+    public double BMI;
+    public int birthdate;
+    public int birthmonth;
+    public int birthyear;
+    public int age;
+
+    // Métodos que as classes filhas vão sobrescrever (@Override)
+    public void calculateBMI() {
+        // Será sobrescrevido em Male e Female
+    }
+
+    public void findage() {
+        // Será sobrescrevido em Male e Female
+    }
+
+    // Getters necessários para a TableView encontrar os dados automaticamente
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public double getHeight() { return height; }
+    public double getWeight() { return weight; }
+    public String getGender() { return gender; }
+    public double getBMI() { return BMI; }
+    public int getAge() { return age; }
+}
