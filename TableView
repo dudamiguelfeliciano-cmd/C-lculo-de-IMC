@@ -1,0 +1,228 @@
+package com.example.fa22bcs040lab_final;
+
+import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+import java.io.*;
+
+public class HelloApplication extends Application {
+
+    // Globais conforme sua estrutura de dados
+    File f = new File("src/data.txt");
+    Male male[] = new Male[50];
+    Female female[] = new Female[50];
+    int fcount = 0;
+    int mcount = 0;
+    int idContador = 1; // Para preencher a coluna ID da imagem
+
+    @Override
+    public void start(Stage stage) throws IOException {
+
+        // Inicializa os arrays exatamente como você fez
+        for (int i = 0; i < male.length; i++) {
+            male[i] = new Male();
+            female[i] = new Female();
+        }
+
+        // --- BARRA DE MENU (Igual à imagem) ---
+        MenuBar menuBar = new MenuBar();
+        menuBar.getMenus().addAll(new Menu("File"), new Menu("Edit"), new Menu("Help"));
+
+        // --- FORMULÁRIO (Esquerda) ---
+        GridPane gridForm = new GridPane();
+        gridForm.setHgap(10);
+        gridForm.setVgap(5);
+        gridForm.setPadding(new Insets(10, 0, 10, 10));
+
+        TextField namet = new TextField();
+        namet.setPrefWidth(250);
+        TextField txtAltura = new TextField(); // Resgatando o input por texto da imagem
+        TextField txtPeso = new TextField();
+
+        gridForm.add(new Label("Nome:"), 0, 0);
+        gridForm.add(namet, 0, 1);
+        gridForm.add(new Label("Altura:"), 0, 2);
+        gridForm.add(txtAltura, 0, 3);
+        gridForm.add(new Label("Peso:"), 0, 4);
+        gridForm.add(txtPeso, 0, 5);
+
+        // Seletor de Gênero para saber qual Array usar (Male/Female)
+        ToggleGroup grupoGenero = new ToggleGroup();
+        RadioButton maler = new RadioButton("Male");
+        RadioButton femalr = new RadioButton("Female");
+        maler.setToggleGroup(grupoGenero);
+        femalr.setToggleGroup(grupoGenero);
+        maler.setSelected(true);
+        HBox boxGenero = new HBox(10, maler, femalr);
+        gridForm.add(new Label("Gênero:"), 0, 6);
+        gridForm.add(boxGenero, 0, 7);
+
+        // --- DISPLAY GIGANTE DO IMC (Direita - Igual à imagem) ---
+        Label lblTituloImc = new Label("Cálculo IMC");
+        lblTituloImc.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label lblValorImc = new Label("0.00");
+        lblValorImc.setStyle("-fx-font-size: 80px; -fx-text-fill: #333333;");
+        
+        VBox displayDireita = new VBox(0, lblTituloImc, lblValorImc);
+        displayDireita.setAlignment(Pos.TOP_CENTER);
+        displayDireita.setPadding(new Insets(10, 40, 0, 80));
+
+        HBox regiaoSuperior = new HBox(gridForm, displayDireita);
+
+        // --- BOTÕES DE AÇÃO (Meio - Igual à imagem) ---
+        Button btnCalcular = new Button("Calcular IMC");
+        Button save = new Button("Salvar");
+        Button display = new Button("Carregar Dados"); // Mudado para carregar e atualizar a lista
+        HBox boxBotoes = new HBox(10, btnCalcular, save, display);
+        boxBotoes.setPadding(new Insets(10));
+
+        // --- TABELA DE EXIBIÇÃO (Baixo - Igual à imagem) ---
+        TableView<Person> t1 = new TableView<>();
+        t1.setPlaceholder(new Label("Não há conteúdo na tabela"));
+
+        TableColumn idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(new PropertyValueFactory<>("id")); // Adicionado ID no modelo
+        idCol.setPrefWidth(60);
+
+        TableColumn name = new TableColumn<>("NOME");
+        name.setCellValueFactory(new PropertyValueFactory<>("name"));
+        name.setPrefWidth(220);
+
+        TableColumn heighc = new TableColumn<>("ALTURA");
+        heighc.setCellValueFactory(new PropertyValueFactory<>("height"));
+        heighc.setPrefWidth(120);
+
+        TableColumn bmi = new TableColumn<>("IMC");
+        bmi.setCellValueFactory(new PropertyValueFactory<>("BMI"));
+        bmi.setPrefWidth(120);
+
+        t1.getColumns().addAll(idCol, name, heighc, bmi);
+
+        // --- LÓGICA DE EVENTOS ---
+
+        // 1. AÇÃO CALCULAR (Apenas calcula e joga no painel gigante)
+        btnCalcular.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                try {
+                    double alt = Double.parseDouble(txtAltura.getText().replace(",", "."));
+                    double pes = Double.parseDouble(txtPeso.getText().replace(",", "."));
+                    
+                    // Mostra uma prévia do cálculo baseado na fórmula padrão temporariamente
+                    double imcPrevio = pes / (alt * alt);
+                    lblValorImc.setText(String.format("%.2f", imcPrevio));
+                } catch (Exception e) {
+                    lblValorImc.setText("Erro");
+                }
+            }
+        });
+
+        // 2. AÇÃO SALVAR (Grava os objetos nos Arrays globais e serializa o Estado Completo)
+        save.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                try {
+                    double alt = Double.parseDouble(txtAltura.getText().replace(",", "."));
+                    double pes = Double.parseDouble(txtPeso.getText().replace(",", "."));
+
+                    if (maler.isSelected()) {
+                        male[mcount].id = idContador++;
+                        male[mcount].name = namet.getText();
+                        male[mcount].height = alt;
+                        male[mcount].weight = pes;
+                        male[mcount].gender = "Male";
+                        male[mcount].calculateBMI();
+                        mcount++;
+                    } else if (femalr.isSelected()) {
+                        female[fcount].id = idContador++;
+                        female[fcount].name = namet.getText();
+                        female[fcount].height = alt;
+                        female[fcount].weight = pes;
+                        female[fcount].gender = "Female";
+                        female[fcount].calculateBMI();
+                        fcount++;
+                    }
+
+                    // CORREÇÃO: Salva a lista inteira estruturada para não apagar o histórico
+                    ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f));
+                    oos.writeInt(mcount);
+                    oos.writeInt(fcount);
+                    oos.writeInt(idContador);
+                    oos.writeObject(male);
+                    oos.writeObject(female);
+                    oos.close();
+
+                    // Atualiza o display gigante com o valor final computado pela classe
+                    if (maler.isSelected()) lblValorImc.setText(String.format("%.2f", male[mcount-1].BMI));
+                    else lblValorImc.setText(String.format("%.2f", female[fcount-1].BMI));
+
+                    // Limpa os campos
+                    namet.clear();
+                    txtAltura.clear();
+                    txtPeso.clear();
+
+                } catch (Exception e) {
+                    System.out.println("Erro ao salvar: " + e);
+                }
+            }
+        });
+
+        // 3. AÇÃO CARREGAR / EXIBIR (Desserializa tudo de volta para os arrays e atualiza a tabela)
+        display.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                try {
+                    if (f.exists()) {
+                        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f));
+                        mcount = ois.readInt();
+                        fcount = ois.readInt();
+                        idContador = ois.readInt();
+                        male = (Male[]) ois.readObject();
+                        female = (Female[]) ois.readObject();
+                        ois.close();
+                    }
+
+                    // Transfere dos seus Arrays para a lista observável da Tabela
+                    ObservableList<Person> all = FXCollections.observableArrayList();
+                    for (int i = 0; i < mcount; i++) {
+                        if(male[i] != null && male[i].name != null) all.add(male[i]);
+                    }
+                    for (int i = 0; i < fcount; i++) {
+                        if(female[i] != null && female[i].name != null) all.add(female[i]);
+                    }
+                    t1.setItems(all);
+
+                } catch (Exception e) {
+                    System.out.println("Erro ao carregar: " + e);
+                }
+            }
+        });
+
+        // --- MONTAGEM COMPLETA DA JANELA ---
+        VBox layoutCentro = new VBox(0, regiaoSuperior, boxBotoes, t1);
+        VBox.setVgrow(t1, Priority.ALWAYS);
+
+        BorderPane raiz = new BorderPane();
+        raiz.setTop(menuBar);
+        raiz.setCenter(layoutCentro);
+
+        Scene s = new Scene(raiz, 650, 500);
+        stage.setScene(s);
+        stage.setTitle("FA22-BCS-040 - Laboratório Final");
+        stage.show();
+    }
+
+    public static void main(String[] args) {
+        launch();
+    }
+}
